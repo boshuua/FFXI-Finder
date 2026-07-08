@@ -11,163 +11,156 @@ import { SearchFormComponent } from '../search-form/search-form.component';
   styleUrl: './character-search.component.css'
 })
 export class CharacterSearchComponent {
-  characterData: any; // Holds all fetched data
-  character: any;
-  characterImageUrl: string | null = null;
-  equipment: any;
-  statistics: any;
-  professions: any;
-  reputations: any;
-  titles: any;
-  specializations: any;
-  mounts: any;
-  pets: any;
-  achievements: any;
-  mythicKeystone: any;
-  pvpSummary: any;
-  raids: any;
-  error: any;
+  character: any = null;
+  classJobs: any = null;
+  achievements: any = null;
+  loading: boolean = false;
+  error: any = null;
 
-  // List of stats to display in the table
+  gearSlots = [
+    { key: 'Mainhand', label: 'Main Hand' },
+    { key: 'Offhand', label: 'Off Hand' },
+    { key: 'Head', label: 'Head' },
+    { key: 'Body', label: 'Body' },
+    { key: 'Hands', label: 'Hands' },
+    { key: 'Legs', label: 'Legs' },
+    { key: 'Feet', label: 'Feet' },
+    { key: 'Earrings', label: 'Earrings' },
+    { key: 'Necklace', label: 'Necklace' },
+    { key: 'Bracelets', label: 'Bracelets' },
+    { key: 'Ring1', label: 'Ring 1' },
+    { key: 'Ring2', label: 'Ring 2' }
+  ];
+
   displayStats = [
-    { key: 'strength', label: 'Strength' },
-    { key: 'agility', label: 'Agility' },
-    { key: 'intellect', label: 'Intellect' },
-    { key: 'stamina', label: 'Stamina' },
-    { key: 'armor', label: 'Armor' },
-    { key: 'mastery', label: 'Mastery', isPercent: true },
-    { key: 'versatility', label: 'Versatility', isPercent: true },
-    { key: 'melee_crit', label: 'Crit', isPercent: true },
-    { key: 'melee_haste', label: 'Haste', isPercent: true },
-    { key: 'attack_power', label: 'AP' }
+    { key: 'Strength', label: 'Strength', category: 'Attributes' },
+    { key: 'Dexterity', label: 'Dexterity', category: 'Attributes' },
+    { key: 'Vitality', label: 'Vitality', category: 'Attributes' },
+    { key: 'Intelligence', label: 'Intelligence', category: 'Attributes' },
+    { key: 'Mind', label: 'Mind', category: 'Attributes' },
+    
+    { key: 'CriticalHitRate', label: 'Critical Hit Rate', category: 'Substats' },
+    { key: 'Determination', label: 'Determination', category: 'Substats' },
+    { key: 'DirectHitRate', label: 'Direct Hit Rate', category: 'Substats' },
+    
+    { key: 'Defense', label: 'Defense', category: 'Defense' },
+    { key: 'MagicDefense', label: 'Magic Defense', category: 'Defense' },
+    
+    { key: 'AttackPower', label: 'Attack Power', category: 'Offense' },
+    { key: 'SkillSpeed', label: 'Skill Speed', category: 'Offense' },
+    { key: 'AttackMagicPotency', label: 'Attack Magic Potency', category: 'Offense' },
+    { key: 'HealingMagicPotency', label: 'Healing Magic Potency', category: 'Offense' },
+    { key: 'SpellSpeed', label: 'Spell Speed', category: 'Offense' },
+    
+    { key: 'Tenacity', label: 'Tenacity', category: 'Special' },
+    { key: 'Piety', label: 'Piety', category: 'Special' }
   ];
 
   constructor(private wowApiService: WowApiService) { }
 
   onSearch(searchData: { characterName: string, realm: string }) {
-    this.characterData = null;
+    this.loading = true;
     this.character = null;
-    this.characterImageUrl = null;
-    this.equipment = null;
-    this.statistics = null;
-    this.professions = null;
-    this.reputations = null;
-    this.titles = null;
-    this.specializations = null;
-    this.mounts = null;
-    this.pets = null;
+    this.classJobs = null;
     this.achievements = null;
-    this.mythicKeystone = null;
-    this.pvpSummary = null;
-    this.raids = null;
     this.error = null;
 
     this.wowApiService.getCharacterData(searchData.characterName, searchData.realm)
       .subscribe(
-        (data) => {
-          this.characterData = data;
-          this.character = data.profile;
-          this.characterImageUrl = data.imageUrl;
-          this.equipment = data.equipment;
-          this.statistics = data.statistics;
-          this.professions = data.professions;
-          this.reputations = data.reputations;
-          this.titles = data.titles;
-          this.specializations = data.specializations;
-          this.mounts = data.mounts;
-          this.pets = data.pets;
-          this.achievements = data.achievements;
-          this.mythicKeystone = data.mythicKeystone;
-          this.pvpSummary = data.pvpSummary;
-          this.raids = data.raids;
+        (data: any) => {
+          this.loading = false;
+          // nodestone character parser returns character at data.Character
+          this.character = data.Character;
+          this.classJobs = data.ClassJobs;
+          this.achievements = data.Achievements;
           this.error = null;
         },
         (error) => {
+          this.loading = false;
           this.error = error;
+          console.error(error);
         }
       );
   }
 
-  getActiveSpec(): any {
-    return this.specializations?.active_specialization;
+  getItemLevel(item: any): number {
+    if (!item || !item.ItemLevel) return 0;
+    // Extract digit values from item level string (e.g. "Item Level 530" -> 530)
+    const match = String(item.ItemLevel).match(/\d+/);
+    return match ? parseInt(match[0], 10) : 0;
   }
 
-  getBestMythicRun(): any {
-    if (!this.mythicKeystone?.seasons || this.mythicKeystone.seasons.length === 0) return null;
-    // This is a simplified version, ideally you'd fetch the latest season's best runs
-    return this.mythicKeystone.seasons[0]; 
-  }
-
-  getRaidProgression(): any[] {
-    if (!this.raids?.expansions) return [];
-    // Return latest expansions for progression
-    return this.raids.expansions.slice(-2).reverse();
-  }
-
-  getItemStat(item: any, statKey: string): string {
-    if (!item.stats || item.stats.length === 0) return '-';
+  getAverageItemLevel(): number {
+    if (!this.character) return 0;
+    let totalILvl = 0;
+    let count = 0;
     
-    // Normalize stat key for comparison (e.g., 'melee_crit' -> 'crit')
-    const normalizedKey = statKey.toLowerCase().replace('melee_', '').replace('spell_', '').replace('ranged_', '');
-    
-    const foundStat = item.stats.find((s: any) => {
-      const type = s.type.name.toLowerCase();
-      return type.includes(normalizedKey) || (normalizedKey === 'ap' && type.includes('attack power'));
-    });
-
-    if (!foundStat) return '-';
-    
-    const value = foundStat.value;
-    // If it's a primary stat or armor, just show the number
-    if (['strength', 'agility', 'intellect', 'stamina', 'armor'].includes(normalizedKey)) {
-      return value.toString();
-    }
-    
-    // For combat ratings (crit, haste, etc.), we'd ideally show the percentage contribution 
-    // but the API usually gives raw rating points. We'll just show the raw value for now.
-    return value.toString();
-  }
-
-  getTotalItemStat(statKey: string): string {
-    if (!this.equipment?.equipped_items) return '0';
-    
-    let total = 0;
-    this.equipment.equipped_items.forEach((item: any) => {
-      const valStr = this.getItemStat(item, statKey);
-      if (valStr !== '-') {
-        total += parseFloat(valStr);
+    this.gearSlots.forEach(slot => {
+      const item = this.character[slot.key];
+      if (item && item.Name) {
+        const ilvl = this.getItemLevel(item);
+        if (ilvl > 0) {
+          totalILvl += ilvl;
+          count++;
+        }
       }
     });
-
-    const statConfig = this.displayStats.find(s => s.key === statKey);
-    if (statConfig?.isPercent) {
-      // If it's a percent stat, we show the total with 2 decimals
-      return total.toFixed(2) + '%';
-    }
     
-    return total.toString();
+    return count > 0 ? Math.round(totalILvl / count) : 0;
   }
 
-  getEquippedItem(slotType: string): any | undefined {
-    if (this.equipment && this.equipment.equipped_items) {
-      return this.equipment.equipped_items.find((item: any) => item.slot.type === slotType);
+  getMateriaList(item: any): string[] {
+    if (!item) return [];
+    const materias: string[] = [];
+    for (let i = 1; i <= 5; i++) {
+      const materia = item[`Materia_${i}`];
+      if (materia && materia.Name) {
+        materias.push(materia.Name);
+      }
     }
-    return undefined;
+    return materias;
   }
 
-  getPrimaryCrit(): number | null {
-    if (!this.statistics) return null;
-    if (this.statistics.melee_crit?.value > 0) return this.statistics.melee_crit.value;
-    if (this.statistics.spell_crit?.value > 0) return this.statistics.spell_crit.value;
-    if (this.statistics.ranged_crit?.value > 0) return this.statistics.ranged_crit.value;
-    return null;
+  getJobCategories() {
+    if (!this.classJobs) return [];
+    
+    const tanks = ['Paladin', 'Warrior', 'Darkknight', 'Gunbreaker'];
+    const healers = ['Whitemage', 'Scholar', 'Astrologian', 'Sage'];
+    const melee = ['Monk', 'Dragoon', 'Ninja', 'Samurai', 'Reaper', 'Viper'];
+    const rangedPhys = ['Bard', 'Machinist', 'Dancer'];
+    const rangedMagic = ['Blackmage', 'Summoner', 'Redmage', 'Pictomancer', 'Bluemage'];
+    const crafters = ['Carpenter', 'Blacksmith', 'Armorer', 'Goldsmith', 'Leatherworker', 'Weaver', 'Alchemist', 'Culinarian'];
+    const gatherers = ['Miner', 'Botanist', 'Fisher'];
+
+    const getLevels = (jobs: string[]) => {
+      return jobs.map(job => {
+        const jobData = this.classJobs[job];
+        return {
+          name: this.formatJobName(job),
+          level: jobData?.Level || 0,
+          currentExp: jobData?.CurrentEXP || 0,
+          maxExp: jobData?.MaxEXP || 0
+        };
+      });
+    };
+
+    return [
+      { name: 'Tanks', jobs: getLevels(tanks), color: '#3370ff', class: 'role-tank' },
+      { name: 'Healers', jobs: getLevels(healers), color: '#29c25d', class: 'role-healer' },
+      { name: 'Melee DPS', jobs: getLevels(melee), color: '#e03e3e', class: 'role-dps-melee' },
+      { name: 'Phys Ranged', jobs: getLevels(rangedPhys), color: '#e67e22', class: 'role-dps-ranged' },
+      { name: 'Magic Ranged', jobs: getLevels(rangedMagic), color: '#9b59b6', class: 'role-dps-caster' },
+      { name: 'Crafters (DoH)', jobs: getLevels(crafters), color: '#b58252', class: 'role-doh' },
+      { name: 'Gatherers (DoL)', jobs: getLevels(gatherers), color: '#3498db', class: 'role-dol' }
+    ];
   }
 
-  getPrimaryHaste(): number | null {
-    if (!this.statistics) return null;
-    if (this.statistics.melee_haste?.value > 0) return this.statistics.melee_haste.value;
-    if (this.statistics.spell_haste?.value > 0) return this.statistics.spell_haste.value;
-    if (this.statistics.ranged_haste?.value > 0) return this.statistics.ranged_haste.value;
-    return null;
+  formatJobName(job: string): string {
+    if (job === 'Darkknight') return 'Dark Knight';
+    if (job === 'Whitemage') return 'White Mage';
+    if (job === 'Blackmage') return 'Black Mage';
+    if (job === 'Redmage') return 'Red Mage';
+    if (job === 'Bluemage') return 'Blue Mage';
+    return job;
   }
 }

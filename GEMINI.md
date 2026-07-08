@@ -1,16 +1,16 @@
-# Wow-Character-Finder Project
+# FFXIV-Character-Finder Project
 
 ## Project Overview
 
-This is a full-stack web application designed to fetch and display detailed World of Warcraft character information. The application provides a data-rich dashboard for a searched character, including their equipment, stats, progression, collections, and more.
+This is a full-stack web application designed to search and display detailed Final Fantasy XIV Online (FFXIV) character information. It scrapes and parses character sheets, gear setups, attributes, and class job levels directly from the official Lodestone portal.
 
-- **Frontend:** Built with **Angular**, using TypeScript. It features a component-based architecture and utilizes RxJS for handling asynchronous API calls.
-- **Backend:** A simple **Node.js** server using the **Express** framework. It acts as a proxy to communicate with the official Blizzard Battle.net API. Its primary responsibilities are to securely handle OAuth 2.0 authentication (managing client credentials) and to forward API requests from the frontend to the Blizzard API, avoiding CORS issues and protecting API keys.
-- **Styling:** The UI is styled with pure CSS, following a modern, dark-themed dashboard aesthetic inspired by popular WoW-related tools.
+- **Frontend:** Built with **Angular**, using TypeScript. It features a component-based autocomplete search form for FFXIV worlds/servers, and a premium dark-themed dashboard presenting equipment (with item level, glamour, dyes, and materias), core attributes, and progression levels.
+- **Backend:** A Node.js Express server incorporating the **xivapi/nodestone** parsing engine. It handles scraping and parsing the Lodestone pages via static CSS selector configurations, returning clean JSON models to the client.
+- **Styling:** The UI is styled with pure CSS (Inter and Cinzel typography), capturing the elegant, high-fantasy aesthetic of the official FFXIV interface with deep slate-navy colors and gold-trimmed borders.
 
 ## Building and Running
 
-The application consists of two separate parts that must be run concurrently: the backend proxy and the frontend development server.
+The application consists of two separate parts that must be run concurrently: the backend server and the frontend development server.
 
 ### 1. Running the Backend
 
@@ -23,15 +23,18 @@ cd backend
 # Install dependencies (only required on first run)
 npm install
 
+# Build the TypeScript files
+npm run build
+
 # Start the server
-node server.js
+npm start
 ```
 
-The proxy server will start on `http://localhost:3000`.
+The server will start on `http://localhost:3000`.
 
 ### 2. Running the Frontend
 
-The frontend is a standard Angular CLI project.
+The frontend is a standard Angular CLI project located at the root.
 
 ```bash
 # Navigate to the project root directory
@@ -48,7 +51,8 @@ The frontend application will be available at `http://localhost:4200/`.
 
 ## Development Conventions
 
-- **API Interaction:** All communication with the Battle.net API is handled by the `WowApiService` (`src/app/wow-api.service.ts`). This service makes HTTP requests to the local Node.js backend proxy, which then forwards them to Blizzard.
-- **Component Structure:** The main view is managed by the `CharacterSearchComponent` (`src/app/character-search/`), which is responsible for orchestrating data fetching and rendering the dashboard.
-- **Error Handling:** API requests in the `WowApiService` are individually wrapped with RxJS `catchError` operators. This makes the UI resilient, allowing it to display partial data even if one or more of the numerous API endpoints fail.
-- **Environment:** The backend proxy is hardcoded to the `'eu'` region. API credentials in `backend/server.js` should be replaced with your own for a production environment, preferably using environment variables.
+- **API Interaction:** All communication with the Lodestone is handled by `WowApiService` (`src/app/wow-api.service.ts`), which sends requests to the local Express server proxy. It performs an initial name/world resolution using the `/Character/Search` endpoint before fetching full details via `/Character/:id`.
+- **Component Structure:** 
+  - `SearchFormComponent` (`src/app/search-form/`): Implements FFXIV worlds autocomplete filtering.
+  - `CharacterSearchComponent` (`src/app/character-search/`): Coordinates loading state, error boundaries, and renders the rich adventurer profile dashboard.
+- **Scraping Selectors:** The selectors are managed locally via the `lodestone-css-selectors` package in `backend/lodestone-css-selectors/` mapped in `backend/package.json` to stay immune to upstream breaking changes.

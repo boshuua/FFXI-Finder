@@ -1,5 +1,49 @@
 <div class="search-form">
-  <input type="text" placeholder="Enter character name" [(ngModel)]="characterName">
-  <input type="text" placeholder="Enter realm" [(ngModel)]="realm">
-  <button (click)="searchCharacter()">Search</button>
+  <div class="input-group name-input">
+    <input 
+      type="text" 
+      id="firstNameInput"
+      placeholder="First Name (e.g., Saya)" 
+      [(ngModel)]="firstName"
+      (keyup.enter)="searchCharacter()"
+    >
+  </div>
+  
+  <div class="input-group name-input">
+    <input 
+      type="text" 
+      id="lastNameInput"
+      placeholder="Last Name (e.g., Decesbois)" 
+      [(ngModel)]="lastName"
+      (keyup.enter)="searchCharacter()"
+    >
+  </div>
+  
+  <div class="input-group realm-select-container">
+    <input 
+      type="text" 
+      id="worldInput"
+      placeholder="Select World (e.g., Moogle)" 
+      [(ngModel)]="realmSearchText"
+      (focus)="onRealmInputFocus()"
+      (blur)="onRealmInputBlur()"
+      (input)="onRealmSearchChange()"
+      (keyup.enter)="searchCharacter()"
+      autocomplete="off"
+    >
+    <div *ngIf="showRealmDropdown" class="realm-dropdown">
+      <div 
+        *ngFor="let world of filteredRealms" 
+        class="realm-item"
+        (mousedown)="selectRealm(world)"
+      >
+        {{ world }}
+      </div>
+      <div *ngIf="filteredRealms.length === 0" class="realm-item empty">
+        No worlds found
+      </div>
+    </div>
+  </div>
+
+  <button class="search-btn" (click)="searchCharacter()">Search</button>
 </div>

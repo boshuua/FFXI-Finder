@@ -1,124 +1,227 @@
 <app-search-form (searchEvent)="onSearch($event)"></app-search-form>
 
-<div *ngIf="characterData" class="dashboard-container">
-  <div class="dashboard-layout">
-    <!-- Left Column: Character & Equipment -->
-    <div class="character-column">
-      <div class="character-header">
-        <h2 class="character-name">{{ character.name }}</h2>
-        <p class="character-spec" *ngIf="getActiveSpec()">
-          <span class="spec-name">{{ getActiveSpec().name }}</span>
-        </p>
-        <p class="character-info">Level {{ character.level }} {{ character.race.name }} {{ character.character_class.name }}</p>
-        <p *ngIf="character.guild" class="character-guild">&lt;{{ character.guild.name }}&gt;</p>
-      </div>
+<!-- Loading State -->
+<div *ngIf="loading" class="loading-container">
+  <div class="ffxiv-spinner"></div>
+  <p>Communing with the Lifestream... (Fetching Lodestone data)</p>
+</div>
 
-      <div class="equipment-diagram dashboard-style">
-        <!-- New container for the large character render -->
-        <div class="character-render-container">
-          <img *ngIf="characterImageUrl" [src]="characterImageUrl" alt="{{ character.name }} render" class="character-render-image">
-          <div *ngIf="!characterImageUrl" class="silhouette-placeholder"></div>
-        </div>
+<!-- Error State -->
+<div *ngIf="error" class="error-message">
+  <div class="error-icon">⚠️</div>
+  <h3>Character Not Found</h3>
+  <p>We couldn't retrieve this adventurer's records. Please check the spelling and world name.</p>
+</div>
 
-        <!-- Slots -->
-        <div class="equipment-slot head"><img *ngIf="getEquippedItem('HEAD')?.iconUrl" [src]="getEquippedItem('HEAD')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot neck"><img *ngIf="getEquippedItem('NECK')?.iconUrl" [src]="getEquippedItem('NECK')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot shoulders"><img *ngIf="getEquippedItem('SHOULDER')?.iconUrl" [src]="getEquippedItem('SHOULDER')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot back"><img *ngIf="getEquippedItem('BACK')?.iconUrl" [src]="getEquippedItem('BACK')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot chest"><img *ngIf="getEquippedItem('CHEST')?.iconUrl" [src]="getEquippedItem('CHEST')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot wrist"><img *ngIf="getEquippedItem('WRIST')?.iconUrl" [src]="getEquippedItem('WRIST')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot hands"><img *ngIf="getEquippedItem('HAND')?.iconUrl" [src]="getEquippedItem('HAND')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot waist"><img *ngIf="getEquippedItem('WAIST')?.iconUrl" [src]="getEquippedItem('WAIST')?.iconUrl" class="item-icon"></div>
-
-        <div class="equipment-slot legs"><img *ngIf="getEquippedItem('LEGS')?.iconUrl" [src]="getEquippedItem('LEGS')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot feet"><img *ngIf="getEquippedItem('FEET')?.iconUrl" [src]="getEquippedItem('FEET')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot finger1"><img *ngIf="getEquippedItem('FINGER_1')?.iconUrl" [src]="getEquippedItem('FINGER_1')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot finger2"><img *ngIf="getEquippedItem('FINGER_2')?.iconUrl" [src]="getEquippedItem('FINGER_2')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot trinket1"><img *ngIf="getEquippedItem('TRINKET_1')?.iconUrl" [src]="getEquippedItem('TRINKET_1')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot trinket2"><img *ngIf="getEquippedItem('TRINKET_2')?.iconUrl" [src]="getEquippedItem('TRINKET_2')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot mainhand"><img *ngIf="getEquippedItem('MAIN_HAND')?.iconUrl" [src]="getEquippedItem('MAIN_HAND')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot offhand"><img *ngIf="getEquippedItem('OFF_HAND')?.iconUrl" [src]="getEquippedItem('OFF_HAND')?.iconUrl" class="item-icon"></div>
-        <div class="equipment-slot ranged"><img *ngIf="getEquippedItem('RANGED')?.iconUrl" [src]="getEquippedItem('RANGED')?.iconUrl" class="item-icon"></div>
-      </div>
+<!-- Dashboard Container -->
+<div *ngIf="character" class="dashboard-container">
+  
+  <!-- Profile Summary Header Card -->
+  <div class="profile-header-card">
+    <div class="portrait-section">
+      <img *ngIf="character.Portrait" [src]="character.Portrait" alt="{{ character.Name }}" class="portrait-img">
+      <div *ngIf="!character.Portrait" class="portrait-placeholder"></div>
     </div>
-
-    <!-- Right Column: Professional Stats Table & Progression -->
-    <div class="stats-column">
-      <div class="stats-table-wrapper">
-        <table class="dashboard-table">
-          <thead>
-            <tr>
-              <th class="sticky-col">Stat Breakdown</th>
-              <th>Buffed</th>
-              <th>Total</th>
-              <th class="item-stats-header">Item Stats</th>
-              <th *ngFor="let item of equipment?.equipped_items" class="item-header-icon">
-                <img [src]="item.iconUrl" [title]="item.name" class="table-icon">
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let stat of displayStats">
-              <td class="sticky-col stat-label">{{ stat.label }}</td>
-              <td class="buffed-val">{{ (statistics?.[stat.key]?.effective || statistics?.[stat.key]?.value || 0) * 1.05 | number: (stat.isPercent ? '1.2-2' : '1.0-0') }}{{ stat.isPercent ? '%' : '' }}</td>
-              <td class="total-val">{{ (statistics?.[stat.key]?.effective || statistics?.[stat.key]?.value || 0) | number: (stat.isPercent ? '1.2-2' : '1.0-0') }}{{ stat.isPercent ? '%' : '' }}</td>
-              <td class="item-stats-val">{{ getTotalItemStat(stat.key) }}</td>
-              <td *ngFor="let item of equipment?.equipped_items" class="item-stat-cell">
-                {{ getItemStat(item, stat.key) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    
+    <div class="profile-details-section">
+      <div class="profile-basic">
+        <img *ngIf="character.Avatar" [src]="character.Avatar" alt="Avatar" class="avatar-img">
+        <div class="name-title-group">
+          <span class="character-title" *ngIf="character.Title">{{ character.Title }}</span>
+          <h2 class="character-name">{{ character.Name }}</h2>
+        </div>
       </div>
-
-      <!-- Progression Row -->
-      <div class="progression-row">
-        <div class="prog-card mythic-card" *ngIf="mythicKeystone">
-          <h4>Mythic+ Score</h4>
-          <div class="mythic-score" [style.color]="'#a335ee'">{{ mythicKeystone.rating | number:'1.0-0' }}</div>
+      
+      <div class="meta-badge-grid">
+        <div class="meta-badge">
+          <span class="label">World</span>
+          <span class="value">{{ character.World }} [{{ character.DC }}]</span>
         </div>
-        
-        <div class="prog-card pvp-card" *ngIf="pvpSummary">
-          <h4>PvP Rating</h4>
-          <div class="pvp-stats">
-            <span *ngIf="pvpSummary.brackets?.length">3v3: {{ pvpSummary.brackets[1]?.rating || 0 }}</span>
-            <span *ngIf="!pvpSummary.brackets?.length">No PvP Data</span>
-          </div>
+        <div class="meta-badge">
+          <span class="label">Race & Tribe</span>
+          <span class="value">{{ character.Race }} / {{ character.Tribe }}</span>
         </div>
-
-        <div class="prog-card raid-card">
-          <h4>Latest Raids</h4>
-          <div class="raid-prog" *ngFor="let exp of getRaidProgression()">
-            <div class="raid-item" *ngFor="let instance of exp.instances.slice(0, 2)">
-              {{ instance.instance.name }}: {{ instance.modes[0].progress.completed_count }}/{{ instance.modes[0].progress.total_count }}
-            </div>
-          </div>
+        <div class="meta-badge">
+          <span class="label">Gender</span>
+          <span class="value gender-symbol" [ngClass]="{'male': character.Gender === '♂', 'female': character.Gender === '♀'}">
+            {{ character.Gender }}
+          </span>
+        </div>
+        <div class="meta-badge iLvl-badge">
+          <span class="label">Avg iLvl</span>
+          <span class="value gold-text">{{ getAverageItemLevel() }}</span>
         </div>
       </div>
 
-      <!-- Footer Info -->
-      <div class="secondary-info">
-        <div class="professions-card">
-          <h3>Professions</h3>
-          <div *ngFor="let p of professions?.primaries" class="prof-tag">{{ p.profession.name }}</div>
-          <div *ngIf="!professions?.primaries?.length" class="empty-hint">None</div>
+      <div class="bio-card" *ngIf="character.Bio">
+        <h4>Self-Introduction</h4>
+        <p class="bio-text">"{{ character.Bio }}"</p>
+      </div>
+
+      <div class="free-company-section" *ngIf="character.FreeCompany?.Name">
+        <div class="fc-crest" *ngIf="character.FreeCompany?.IconLayers">
+          <img [src]="character.FreeCompany.IconLayers.Bottom" class="crest-layer bottom">
+          <img [src]="character.FreeCompany.IconLayers.Middle" class="crest-layer middle">
+          <img [src]="character.FreeCompany.IconLayers.Top" class="crest-layer top">
         </div>
-        <div class="collections-card">
-          <h3>Collections</h3>
-          <div class="coll-stats">
-            <span>Mounts: {{ mounts?.mounts?.length || 0 }}</span>
-            <span>Pets: {{ pets?.pets?.length || 0 }}</span>
-          </div>
-        </div>
-        <div class="achievements-card">
-          <h3>Achievements</h3>
-          <div class="ach-score">{{ achievements?.total_points || 0 }} pts</div>
+        <div class="fc-info">
+          <span class="fc-label">Free Company</span>
+          <span class="fc-name">&lt;{{ character.FreeCompany.Name }}&gt;</span>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<div *ngIf="error" class="error-message">
-  <p>Character not found or API error occurred.</p>
+  <!-- Primary Dashboard Grid -->
+  <div class="dashboard-grid">
+    
+    <!-- Left Column: Equipped Gear -->
+    <div class="dashboard-panel gear-panel">
+      <div class="panel-header">
+        <h3>Equipped Gear</h3>
+        <span class="sub-header">Lodestone Gearset Breakdown</span>
+      </div>
+      
+      <div class="gear-list">
+        <div *ngFor="let slot of gearSlots" class="gear-card">
+          <div class="gear-slot-label">{{ slot.label }}</div>
+          
+          <!-- Equipped Slot -->
+          <div *ngIf="character[slot.key]?.Name" class="gear-item-details">
+            <div class="gear-row-top">
+              <span class="gear-name">{{ character[slot.key].Name }}</span>
+              <span class="gear-ilvl">{{ character[slot.key].ItemLevel }}</span>
+            </div>
+            
+            <div class="gear-row-bottom">
+              <!-- Glamour / Mirage info -->
+              <span *ngIf="character[slot.key].MirageName" class="gear-glamour">
+                幻: {{ character[slot.key].MirageName }}
+              </span>
+              <!-- Dye / Stain info -->
+              <span *ngIf="character[slot.key].Stain" class="gear-dye">
+                🎨 {{ character[slot.key].Stain }}
+              </span>
+            </div>
+
+            <!-- Materia Badges -->
+            <div class="materia-container" *ngIf="getMateriaList(character[slot.key]).length > 0">
+              <span *ngFor="let materia of getMateriaList(character[slot.key])" class="materia-badge" [title]="materia">
+                ●
+              </span>
+            </div>
+          </div>
+          
+          <!-- Empty Slot -->
+          <div *ngIf="!character[slot.key]?.Name" class="gear-empty">
+            Not Equipped or Not Parsed
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Stats sheet -->
+    <div class="dashboard-panel stats-panel">
+      <div class="panel-header">
+        <h3>Attributes & Stats</h3>
+        <span class="sub-header">Current Lodestone Parameters</span>
+      </div>
+      
+      <!-- Vital Stats Bars -->
+      <div class="vital-stats">
+        <div class="vital-bar hp-bar">
+          <div class="vital-header">
+            <span>HP</span>
+            <span>{{ character.Hp || 0 | number }}</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width: 100%"></div>
+          </div>
+        </div>
+        <div class="vital-bar mp-bar">
+          <div class="vital-header">
+            <span>{{ character.MpGpCpParameterName || 'MP' }}</span>
+            <span>{{ character.MpGpCp || 0 | number }}</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width: 100%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grouped Parameters -->
+      <div class="stats-group-container">
+        <!-- Attributes -->
+        <div class="stats-subgroup">
+          <h4>Core Attributes</h4>
+          <div class="stat-row" *ngFor="let stat of displayStats" [class.hidden]="stat.category !== 'Attributes'">
+            <span class="stat-label">{{ stat.label }}</span>
+            <span class="stat-value">{{ character[stat.key] || 0 | number }}</span>
+          </div>
+        </div>
+
+        <!-- Substats / Offensive -->
+        <div class="stats-subgroup">
+          <h4>Mental & Physical Substats</h4>
+          <div class="stat-row" *ngFor="let stat of displayStats" [class.hidden]="stat.category !== 'Substats' && stat.category !== 'Offense'">
+            <span class="stat-label">{{ stat.label }}</span>
+            <span class="stat-value">{{ character[stat.key] || 0 | number }}</span>
+          </div>
+        </div>
+
+        <!-- Defense / Special -->
+        <div class="stats-subgroup">
+          <h4>Defense & Role Specials</h4>
+          <div class="stat-row" *ngFor="let stat of displayStats" [class.hidden]="stat.category !== 'Defense' && stat.category !== 'Special'">
+            <span class="stat-label">{{ stat.label }}</span>
+            <span class="stat-value">{{ character[stat.key] || 0 | number }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Class/Job Levels Grid -->
+  <div class="dashboard-panel classjobs-panel" *ngIf="classJobs">
+    <div class="panel-header">
+      <h3>Job Levels & Progression</h3>
+      <span class="sub-header">Disciple of War, Magic, Hand and Land Levels</span>
+    </div>
+    
+    <div class="job-categories-grid">
+      <div *ngFor="let category of getJobCategories()" class="job-category-card">
+        <h4 [style.border-left-color]="category.color" class="category-title">{{ category.name }}</h4>
+        <div class="job-levels-list">
+          <div *ngFor="let job of category.jobs" class="job-level-row" [ngClass]="{'max-level': job.level === 90 || job.level === 100}">
+            <div class="job-identity">
+              <span class="job-role-indicator" [ngClass]="category.class"></span>
+              <span class="job-name">{{ job.name }}</span>
+            </div>
+            <div class="job-progression">
+              <span class="job-level">Lv. {{ job.level }}</span>
+              <div class="job-exp-track" *ngIf="job.level > 0 && job.level < 100 && job.maxExp > 0">
+                <div class="job-exp-fill" [style.width.%]="(job.currentExp / job.maxExp) * 100"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Achievements Summary Card -->
+  <div class="dashboard-panel achievements-panel" *ngIf="achievements">
+    <div class="panel-header">
+      <h3>Achievements</h3>
+      <span class="sub-header">Lodestone Achievement Records</span>
+    </div>
+    <div class="achievements-summary" *ngIf="achievements.Pagination">
+      <div class="ach-points">
+        <span class="ach-label">Total Points</span>
+        <span class="ach-value gold-text">{{ achievements.Pagination.PageTotal * 10 || 0 }}</span>
+      </div>
+      <p class="ach-hint">Detailed achievements listing parsed from character profile page.</p>
+    </div>
+  </div>
+
 </div>
