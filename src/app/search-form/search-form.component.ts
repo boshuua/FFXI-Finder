@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common'; 
 
@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './search-form.component.html',
   styleUrl: './search-form.component.css'
 })
-export class SearchFormComponent {
+export class SearchFormComponent implements OnInit {
   firstName: string = '';
   lastName: string = '';
   realm: string = '';
@@ -41,6 +41,21 @@ export class SearchFormComponent {
 
   constructor() {
     this.filteredRealms = this.ffxivWorlds;
+  }
+
+  ngOnInit() {
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get('name');
+    const server = params.get('server');
+    if (name) {
+      const parts = name.trim().split(/\s+/);
+      this.firstName = parts[0] || '';
+      this.lastName = parts.slice(1).join(' ') || '';
+    }
+    if (server) {
+      this.realm = server;
+      this.realmSearchText = server;
+    }
   }
 
   searchCharacter() {

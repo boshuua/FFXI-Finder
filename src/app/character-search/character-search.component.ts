@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { WowApiService } from '../wow-api.service';
 import { CommonModule } from '@angular/common';
 import { SearchFormComponent } from '../search-form/search-form.component';
@@ -10,7 +10,7 @@ import { SearchFormComponent } from '../search-form/search-form.component';
   templateUrl: './character-search.component.html',
   styleUrl: './character-search.component.css'
 })
-export class CharacterSearchComponent {
+export class CharacterSearchComponent implements OnInit {
   character: any = null;
   classJobs: any = null;
   achievements: any = null;
@@ -18,18 +18,18 @@ export class CharacterSearchComponent {
   error: any = null;
 
   gearSlots = [
-    { key: 'Mainhand', label: 'Main Hand' },
-    { key: 'Offhand', label: 'Off Hand' },
-    { key: 'Head', label: 'Head' },
-    { key: 'Body', label: 'Body' },
-    { key: 'Hands', label: 'Hands' },
-    { key: 'Legs', label: 'Legs' },
-    { key: 'Feet', label: 'Feet' },
-    { key: 'Earrings', label: 'Earrings' },
-    { key: 'Necklace', label: 'Necklace' },
-    { key: 'Bracelets', label: 'Bracelets' },
-    { key: 'Ring1', label: 'Ring 1' },
-    { key: 'Ring2', label: 'Ring 2' }
+    { key: 'Mainhand', label: 'Main Hand', index: 0 },
+    { key: 'Offhand', label: 'Off Hand', index: 1 },
+    { key: 'Head', label: 'Head', index: 2 },
+    { key: 'Body', label: 'Body', index: 3 },
+    { key: 'Hands', label: 'Hands', index: 4 },
+    { key: 'Legs', label: 'Legs', index: 6 },
+    { key: 'Feet', label: 'Feet', index: 7 },
+    { key: 'Earrings', label: 'Earrings', index: 8 },
+    { key: 'Necklace', label: 'Necklace', index: 9 },
+    { key: 'Bracelets', label: 'Bracelets', index: 10 },
+    { key: 'Ring1', label: 'Ring 1', index: 11 },
+    { key: 'Ring2', label: 'Ring 2', index: 12 }
   ];
 
   displayStats = [
@@ -58,7 +58,23 @@ export class CharacterSearchComponent {
 
   constructor(private wowApiService: WowApiService) { }
 
+  ngOnInit() {
+    // Automatically trigger search on page load if query parameters exist
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get('name');
+    const server = params.get('server');
+    if (name && server) {
+      this.onSearch({ characterName: name, realm: server });
+    }
+  }
+
   onSearch(searchData: { characterName: string, realm: string }) {
+    // Update URL query parameters without triggering a full page reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('name', searchData.characterName);
+    url.searchParams.set('server', searchData.realm);
+    window.history.pushState({}, '', url.toString());
+
     this.loading = true;
     this.character = null;
     this.classJobs = null;

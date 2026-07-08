@@ -84,9 +84,16 @@
       
       <div class="gear-list">
         <div *ngFor="let slot of gearSlots" class="gear-card">
-          <div class="gear-slot-label">{{ slot.label }}</div>
+          <!-- Icon + Slot Label Column -->
+          <div class="gear-slot-label-container">
+            <!-- Show actual item icon if equipped, otherwise show grey placeholder icon -->
+            <img *ngIf="character[slot.key]?.Name && character[slot.key]?.Icon" [src]="character[slot.key].Icon" alt="icon" class="gear-icon-img">
+            <div *ngIf="!character[slot.key]?.Name || !character[slot.key]?.Icon" class="empty-placeholder-icon icon-c--{{ slot.index }}"></div>
+            
+            <div class="gear-slot-label">{{ slot.label }}</div>
+          </div>
           
-          <!-- Equipped Slot -->
+          <!-- Equipped Slot Details -->
           <div *ngIf="character[slot.key]?.Name" class="gear-item-details">
             <div class="gear-row-top">
               <span class="gear-name">{{ character[slot.key].Name }}</span>
@@ -111,6 +118,9 @@
               </span>
             </div>
           </div>
+          
+          <!-- Hover Tooltip Popup -->
+          <div class="ffxiv-tooltip-popup" *ngIf="character[slot.key]?.Html" [innerHTML]="character[slot.key].Html"></div>
           
           <!-- Empty Slot -->
           <div *ngIf="!character[slot.key]?.Name" class="gear-empty">

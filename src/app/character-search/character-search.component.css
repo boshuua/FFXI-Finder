@@ -634,3 +634,73 @@
     object-position: center 20%;
   }
 }
+
+/* FFXIV Tooltip Hover Styles */
+.gear-card {
+  position: relative;
+}
+
+.ffxiv-tooltip-popup {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  width: 412px;
+  background-color: #060810;
+  border-radius: 6px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.9), 0 0 20px rgba(198, 161, 82, 0.2);
+  pointer-events: auto; /* Enable hovering and interacting inside the tooltip */
+}
+
+.gear-card:hover .ffxiv-tooltip-popup,
+.ffxiv-tooltip-popup:hover {
+  display: block !important;
+}
+
+/* Deep styles override to force Lodestone CSS hidden/none rules to show */
+.ffxiv-tooltip-popup ::ng-deep .db-tooltip,
+.ffxiv-tooltip-popup ::ng-deep .db-tooltip__wrapper,
+.ffxiv-tooltip-popup ::ng-deep .item_detail_box {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Equipped Item Icon layouts */
+.gear-slot-label-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.9rem;
+  width: 180px; /* Allocate width for icon + label text */
+  flex-shrink: 0;
+}
+
+.gear-icon-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  border: 1px solid rgba(198, 161, 82, 0.35);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  background-color: #030408;
+  flex-shrink: 0;
+}
+
+.empty-placeholder-icon {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 4px;
+  border: 1px solid rgba(198, 161, 82, 0.15);
+  background-color: rgba(6, 8, 16, 0.4);
+  background-image: url("https://lds-img.finalfantasyxiv.com/h/s/-w7fJ6bEcXdqakxPJx4uwCEyho.png") !important;
+  background-repeat: no-repeat !important;
+  flex-shrink: 0;
+  display: block;
+}
